@@ -68,9 +68,7 @@ Optionally the following two methods can also be overridden:
 
 In your application controller, add the following line:
 
-```ruby
-append_view_path MyRedisTemplateResolver.new
-```
+<tt>append_view_path MyRedisTemplateResolver.new</tt>
 
 where MyRedisTemplateResolver is the name of the class that derives from the
 RedisTemplateResolver class. Supply a template name with a prefix of "redis:"
@@ -78,9 +76,7 @@ to route the lookup request to the redis template resolver.
 
 E.g. to fetch your layouts via http, use the following:
 
-```ruby
-  layout lambda { |args| "redis:some_template_name}" }
-```
+<tt>  layout lambda { |args| "redis:some_template_name}" }</tt>
 
 
 

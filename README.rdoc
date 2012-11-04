@@ -1,0 +1,88 @@
+= Redis Template Resolver
+
+== Overview
+This gem handles remote templates - fetching via http and caching the
+result locally in the process (first cache level), as well as in a redis
+instance (second cache level), as well as fallback handling if an error
+was encountered during the fetching of the template.
+
+The caches obviously allow faster access to the fetched result, where the
+second level redis cache allows a centralized, authoritative result to be
+shared between multiple server processes.
+
+By default, the process-local cache will be refreshed from the redis cached
+result every 60 seconds (configurable).
+
+If an error was encountered during the fetching of the template via http, 
+the library will fall back onto a configurable default template to serve, which
+will be refreshed after a configurable timeout.
+
+Once a template has been fetched successfully, it will not time out or be 
+re-fetched. To fetch the template anew, the redis cache entry needs to be 
+removed, which will trigger a new http fetch the next time the first level
+cache will be refreshed from the second level cache.
+
+== Configuration
+
+The following options can be set on the class in a config/initializer/ file:
+
++RedisTemplateResolver.default_template+:: 
+  *mandatory* Body of the default template to use if the remote template cannot
+  be retrieved. Note that this is the actual template, not the path to a
+  template file.
++RedisTemplateResolver.redis_connector+::
+  *mandatory* The redis connector to use for storing templates in the second
+  level cache. Note that this is an already configured instance of Redis, not
+  the connection parameters.
++RedisTemplateResolver.local_cache_ttl+:: 
+  The number of seconds between refreshing the in-process cache from redis
+  (defaults to 60).
++RedisTemplateResolver.local_cache_negative_ttl+:: 
+  The number of seconds to wait before retrying to fetch the template via http,
+  if anything went wrong (defaults to 10).
++RedisTemplateResolver.http_timeout+:: 
+  Seconds to wait for the fetch via http to complete (defaults to 5 seconds).
++RedisTemplateResolver.template_handler_name+:: 
+  Name of the template handler that should render the fetched template
+  (defaults to "erb").
+
+= Usage
+Create a class that derives from RedisTemplateResolver.
+
+This class *must* override the following method: +lookup_template_url+. The
+method will receive the name of the template to be retrieved in +@template_name+
+and should return a full URL to the template.
+
+Optionally the following two methods can also be overridden:
+
++postprocess_template( template_body )+:: 
+  Called right after successfully retrieving the template file, which is passed
+  in as an argument. The method should return the template body to be actually
+  stored and used. If you want to perform sanity checks on the returned
+  template, you can raise an +TemplateRejectedError+ exception, which will
+  refuse the retrieved template and pretend that template retrieval failed.
++resolver_guard( name, prefix, partial, details)+:: 
+  If this method is present and returns false or nil, Redis Template Resolver
+  will not handle this template. Return true to process the template resolution
+  with this library.
+
+In your application controller, add the following line:
+
+```ruby
+append_view_path MyRedisTemplateResolver.new
+```
+
+where MyRedisTemplateResolver is the name of the class that derives from the
+RedisTemplateResolver class. Supply a template name with a prefix of "redis:"
+to route the lookup request to the redis template resolver.
+
+E.g. to fetch your layouts via http, use the following:
+
+```ruby
+  layout lambda { |args| "redis:some_template_name}" }
+```
+
+
+
+
+

@@ -41,10 +41,15 @@ class RedisTemplateResolver < ActionView::Resolver
 
   @@local_cache_ttl = 60 # seconds
   cattr_accessor :local_cache_ttl
+
   @@local_cache_negative_ttl = 10 # seconds
   cattr_accessor :local_cache_negative_ttl
+
   @@http_timeout = 5 # seconds
   cattr_accessor :http_timeout
+
+  @@template_handler_name = "erb"
+  cattr_accessor :template_handler_name
 
   cattr_accessor :cache
   cattr_accessor :default_template
@@ -68,20 +73,21 @@ class RedisTemplateResolver < ActionView::Resolver
   array!
 =end
   def find_templates( name, prefix, partial, details )
-    return [] unless prefix == "layouts" && name.start_with?( "redis:" )
+    Rails.logger.debug "Called RedisTemplateResolver"
 
-    Rails.logger.debug "Called RedisTemplateResolver!"
-    Rails.logger.debug "Name: #{name.inspect}"
-    Rails.logger.debug "Prefix: #{prefix.inspect}"
-    Rails.logger.debug "Partial: #{partial.inspect}"
-    Rails.logger.debug "Details: #{details.inspect}"
+    return [] unless name.start_with?( "redis:" ) 
+    if respond_to?( :resolver_guard )
+      return [] unless resolver_guard( name, prefix, partial, details )
+    end
+
 
     _, @template_name = name.split(':', 2 )
+    Rails.logger.debug "RedisTemplateResolver fetching template with name: #{@template_name}"
 
     template_body = fetch_template
 
     path = ActionView::Resolver::Path.build( name, prefix, nil )
-    handler = ActionView::Template.handler_for_extension( "mustache" )
+    handler = ActionView::Template.handler_for_extension( self.template_handler_name )
   
     template = ActionView::Template.new( template_body, path, handler,
                                          :virtual_path => path.virtual,

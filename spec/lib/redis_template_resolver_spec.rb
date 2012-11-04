@@ -39,6 +39,21 @@ describe ExampleClass do
       result.should == []
     end
 
+    context "with a guard function supplied" do
+      it 'should abort processing if the guard function returns false' do
+        ExampleClass.any_instance.stub( :resolver_guard ).and_return( false )
+        result = subject.find_templates( "redis:template", "layouts", "", {} )
+        result.should == []
+      end
+
+      it 'should continue processing if the guard function returns true' do
+        HTTParty.stub!( :get => fake_httparty_response )
+        ExampleClass.any_instance.stub( :resolver_guard ).and_return( true )
+        result = subject.find_templates( "redis:template", "layouts", "", {} )
+        result.first.source.should == dummy_remote_template
+      end
+    end
+
     context "when retrieving a relevant template" do
       let( :name ) { "redis:kabeleins_local" }
       let( :prefix ) { "layouts" }

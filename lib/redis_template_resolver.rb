@@ -165,7 +165,9 @@ class RedisTemplateResolver < ActionView::Resolver
   end
 
   def lookup_template_url
+    # :nocov:
     raise "Override me! Expect to find the template name in @template_name"
+    # :nocov:
   end
 
 =begin rdoc
@@ -224,26 +226,5 @@ class RedisTemplateResolver < ActionView::Resolver
 =end
   def store_template_to_redis( template_body )
     return self.redis_connector.set( redis_key, template_body )
-  end
-
-=begin rdoc
-  Ensures that the passed in +body+ string is a valid UTF-8 encoding.
-  Returns true if this is the case, otherwise raises an ArgumentError.
-=end
-  def ensure_template_encoding( body )
-    body.force_encoding( "UTF-8" )
-
-    return if body.valid_encoding?
-    raise TemplateRejectedError, "Remote template encoding error: #{body.encoding.name}"
-  end
-
-
-  def replace_mustache_html_escaped_tags( response_body )
-    response_body.sub!( /(?<!\{)\{\{head\}\}(?!\})/,     '{{{head}}}' ) 
-    response_body.sub!( /(?<!\{)\{\{body\}\}(?!\})/,     '{{{body}}}' ) 
-    response_body.sub!( /(?<!\{)\{\{flash\}\}(?!\})/,    '{{{flash}}}' ) 
-    response_body.sub!( /(?<!\{)\{\{headline\}\}(?!\})/, '{{{headline}}}' ) 
-    response_body.sub!( /(?<!\{)\{\{title\}\}(?!\})/,    '{{{title}}}' ) 
-    return response_body
   end
 end

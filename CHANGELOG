@@ -1,0 +1,6 @@
+v0.1.1
+  - Fix dependency in gemspec
+  - Add CHANGELOG file
+
+v0.1.0
+  - Initial independent release

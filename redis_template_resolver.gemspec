@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = "redis_template_resolver"
-  s.version = "0.1"
+  s.version = "0.1.1"
   s.homepage = "https://github.com/psd/redis_template_resolver"
   s.summary = "A template resolver for rails that retrieves templates via http and caches them in redis"
 
@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency( "redis", "> 3.0.0" )
   s.add_runtime_dependency( "httparty", "> 0.8.0" )
   s.add_runtime_dependency( "rails", "~> 3.2.6" )
-  s.add_runtime_dependency( "active_support", ">3.2.0" )
+  s.add_runtime_dependency( "activesupport", ">3.2.0" )
 
   s.add_development_dependency( "rspec", ">2.10.0" )
   s.add_development_dependency( "simplecov" )

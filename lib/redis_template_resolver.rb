@@ -183,11 +183,15 @@ class RedisTemplateResolver < ActionView::Resolver
     
     return nil unless @@cache[@template_name]
 
-    if @@cache[@template_name][:expiration].to_i <= Time.now.to_i
+    expiration = @@cache[@template_name][:expiration].to_i
+
+    if expiration <= Time.now.to_i
       Rails.logger.debug( "Local cache entry is too old, removing!" )
       @@cache.delete( @template_name )
       return nil
     end
+
+    Rails.logger.debug( "Local cache still valid, expiring in #{expiration.inspect}" )
 
     return @@cache[@template_name][:template]
   end
@@ -214,9 +218,11 @@ class RedisTemplateResolver < ActionView::Resolver
 =end
   def store_template_to_local_cache( template_body, ttl = self.local_cache_ttl )
     @@cache ||= {}
-
+    
+    expiration = Time.now.to_i + ttl
+    Rails.logger.debug( "Caching template locally for #{ttl.inspect} seconds; will expire at #{expiration}" )
     @@cache[@template_name] = { :template   => template_body,
-                                :expiration => Time.now.to_i + ttl }
+                                :expiration => expiration }
 
     return template_body
   end

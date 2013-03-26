@@ -76,7 +76,7 @@ class RedisTemplateResolver < ActionView::Resolver
     Rails.logger.debug "Called RedisTemplateResolver"
 
     return [] unless name.start_with?( "redis:" ) 
-    if respond_to?( :resolver_guard )
+    if respond_to?( :resolver_guard, true )
       return [] unless resolver_guard( name, prefix, partial, details )
     end
 
@@ -155,7 +155,7 @@ class RedisTemplateResolver < ActionView::Resolver
 
     return nil if response.code == 404
     
-    response_body = postprocess_template( response_body ) if respond_to?( :postprocess_template )
+    response_body = postprocess_template( response_body ) if respond_to?( :postprocess_template, true )
 
     return response_body
     

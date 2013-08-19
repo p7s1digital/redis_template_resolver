@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = "redis_template_resolver"
-  s.version = "0.2.0"
+  s.version = "0.3.0"
   s.homepage = "https://github.com/psd/redis_template_resolver"
   s.summary = "A template resolver for rails that retrieves templates via http and caches them in redis"
 

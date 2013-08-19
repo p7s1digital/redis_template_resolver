@@ -1,3 +1,7 @@
+v0.3.0
+  - Replace HTTParty with Curb. Will require libcurl + header files to be 
+    installed
+
 v0.2.0
   - Ruby 2.0 compatibility
 

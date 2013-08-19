@@ -12,11 +12,11 @@ describe ExampleClass do
   let( :dummy_remote_template_with_html_escaped_tags ) { "dummy template {{flash}} {{body}} {{head}} {{headline}} {{title}}" }
 
   let( :fake_httparty_response ) do
-    OpenStruct.new( :code => 200, :body => dummy_remote_template )
+    OpenStruct.new( :response_code => 200, :body_str => dummy_remote_template )
   end
 
   let( :fake_httparty_response_with_html_escaped_tags ) do
-    OpenStruct.new( :code => 200, :body => dummy_remote_template_with_html_escaped_tags )
+    OpenStruct.new( :response_code => 200, :body_str => dummy_remote_template_with_html_escaped_tags )
   end
 
   let( :redis_connector ) do
@@ -47,7 +47,7 @@ describe ExampleClass do
       end
 
       it 'should continue processing if the guard function returns true' do
-        HTTParty.stub!( :get => fake_httparty_response )
+        Curl.stub( :get => fake_httparty_response )
         ExampleClass.any_instance.stub( :resolver_guard ).and_return( true )
         result = subject.find_templates( "redis:template", "layouts", "", {} )
         result.first.source.should == dummy_remote_template
@@ -74,7 +74,7 @@ describe ExampleClass do
         context "if the template in the local cache is too old" do
           before( :each ) do
             Timecop.travel( described_class.local_cache_ttl.seconds.ago ) do
-              HTTParty.stub!( :get ).and_return( fake_httparty_response )
+              Curl.stub( :get ).and_return( fake_httparty_response )
               subject.find_templates( name, prefix, partial, details )
             end
           end
@@ -89,7 +89,7 @@ describe ExampleClass do
           before( :each ) do
             target_time = described_class.local_cache_ttl - 2
             Timecop.travel( target_time.seconds.ago ) do
-              HTTParty.stub!( :get => fake_httparty_response )
+              Curl.stub( :get => fake_httparty_response )
               subject.find_templates( name, prefix, partial, details )
             end
           end
@@ -109,7 +109,7 @@ describe ExampleClass do
 
         context "if a template could be found in the redis cache" do
           before( :each ) do
-            redis_connector.stub!( :get ).and_return( dummy_remote_template )
+            redis_connector.stub( :get ).and_return( dummy_remote_template )
           end
 
           it "should store the template in the local cache for 60 seconds" do
@@ -126,7 +126,7 @@ describe ExampleClass do
           end
 
           it "should not fall back to http" do
-            HTTParty.should_not_receive( :get )
+            Curl.should_not_receive( :get )
             subject.find_templates( name, prefix, partial, details )
           end
 
@@ -134,12 +134,12 @@ describe ExampleClass do
 
         context "if no template could be found in the redis cache" do
           before( :each ) do
-            redis_connector.stub!( :get )
+            redis_connector.stub( :get )
           end
 
           context "if the template could be retrieved via HTTP" do
             before( :each ) do
-              HTTParty.stub!( :get => fake_httparty_response )
+              Curl.stub( :get => fake_httparty_response )
             end
 
             it "should store the template in redis" do
@@ -164,7 +164,7 @@ describe ExampleClass do
 
           context "if the template could not be retrieved via HTTP" do
             before( :each ) do
-              HTTParty.stub!( :get ).and_raise( Timeout::Error )
+              Curl.stub( :get ).and_raise( Curl::Err::TimeoutError )
             end
 
             it "should use the default template" do

@@ -148,18 +148,20 @@ class RedisTemplateResolver < ActionView::Resolver
 
     Rails.logger.info "Fetching remote template from #{layout_url.inspect}"
 
-    response = HTTParty.get( layout_url, :timeout => self.http_timeout )
-    response_body = response.body
+    response = Curl.get( layout_url ) do |curl| 
+                 curl.timeout = self.http_timeout
+               end
+    response_body = response.body_str
 
-    Rails.logger.info "Got remote template response code #{response.code} with body #{response_body.inspect}"
+    Rails.logger.info "Got remote template response code #{response.response_code} with body #{response_body.inspect}"
 
-    return nil if response.code == 404
+    return nil if response.response_code == 404
     
     response_body = postprocess_template( response_body ) if respond_to?( :postprocess_template, true )
 
     return response_body
     
-  rescue Timeout::Error, SocketError, Errno::ECONNREFUSED, TemplateRejectedError => e
+  rescue SocketError, Curl::Err::TimeoutError, Errno::ECONNREFUSED, TemplateRejectedError => e
     Rails.logger.error e.message
     return nil
   end

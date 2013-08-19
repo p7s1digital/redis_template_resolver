@@ -3,7 +3,7 @@ require 'redis'
 require 'rails'
 require 'action_view'
 require 'active_support/core_ext/numeric/time'
-require 'httparty'
+require 'curb'
 require 'timecop'
 require 'ostruct'
 
